@@ -1,22 +1,5 @@
 -- Criando tabela landing como externa 
 -- O objetivo é ler os arquivos do bucket GCS para tratamento dentro do BigQuery
-CREATE OR REPLACE EXTERNAL TABLE `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`
-OPTIONS (
-  format = 'CSV',
-  uris = ['gs://projeto_nyc/landing/nyc_311/*.csv'],
-  skip_leading_rows = 1,
-  field_delimiter = ',',
-  allow_quoted_newlines = true,
-  allow_jagged_rows = true
-);
-
--- Validando a integridade da ingestão
-SELECT
-  MIN(SAFE_CAST(created_date AS TIMESTAMP)) AS min_created_date,
-  MAX(SAFE_CAST(created_date AS TIMESTAMP)) AS max_created_date,
-  COUNT(*) AS total_registros
-FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
-
 -- Criando tabela bruta (raw) a partir da landing
 CREATE OR REPLACE EXTERNAL TABLE `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311` (
   unique_key STRING,
@@ -27,7 +10,7 @@ CREATE OR REPLACE EXTERNAL TABLE `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311
   complaint_type STRING,
   descriptor STRING,
   location_type STRING,
-  incident_zip STRING, -- Definido como STRING para aceitar "N/A"
+  incident_zip STRING, 
   incident_address STRING,
   street_name STRING,
   cross_street_1 STRING,
@@ -61,6 +44,23 @@ CREATE OR REPLACE EXTERNAL TABLE `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311
   longitude STRING,
   location STRING
 );
+OPTIONS (
+  format = 'CSV',
+  uris = ['gs://projeto_nyc/landing/nyc_311/*.csv'],
+  skip_leading_rows = 1,
+  field_delimiter = ',',
+  allow_quoted_newlines = true,
+  allow_jagged_rows = true
+);
+
+-- Validando a integridade da ingestão
+SELECT
+  MIN(SAFE_CAST(created_date AS TIMESTAMP)) AS min_created_date,
+  MAX(SAFE_CAST(created_date AS TIMESTAMP)) AS max_created_date,
+  COUNT(*) AS total_registros
+FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
+
+
 -- Inserindo registros na tabela bruta (raw) a partir da landing
 -- Fazendo algumas transformações necessárias nos dados
 INSERT INTO `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311`
