@@ -108,3 +108,116 @@ SELECT
   location                                                   AS localizacao
 FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
 
+-- Criando a tabela de staging tratando apenas as colunas de texto
+-- Substituindo nulos por 'Não informado' apenas em colunas STRING 
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311` AS
+SELECT
+    -- Campos numéricos e de datas (mantidos como estão)
+    chave_unica,
+    data_criacao,
+    data_fechamento,
+    data_vencimento,
+    data_atualizacao_resolucao,
+    bbl,
+    coordenada_x_estado,
+    coordenada_y_estado,
+    latitude,
+    longitude,
+
+-- Agência: manter siglas em maiúsculo e tratar valores não informados
+    UPPER(
+        CASE
+            WHEN agencia IS NULL THEN 'NÃO INFORMADO'
+            WHEN agencia IN ('N/A', 'Unspecified', 'UNKNOWN') THEN 'NÃO INFORMADO'
+            ELSE agencia
+        END
+    ) AS agencia,
+
+-- Tipo de reclamação: remover valores inválidos e padronizar texto
+    CASE
+        WHEN tipo_reclamacao IS NULL THEN NULL
+        WHEN REGEXP_CONTAINS(
+            tipo_reclamacao,
+            r'(?i)eval\(|compile\(|<|>|&quot;|-->|\.php|/'
+        ) THEN NULL
+        WHEN LENGTH(TRIM(tipo_reclamacao)) < 3 THEN NULL
+        ELSE INITCAP(LOWER(tipo_reclamacao))
+    END AS tipo_reclamacao,
+
+-- CEP original com CEP padronizado: apenas números com até 5 dígitos
+    cep_incidente,
+    CASE
+        WHEN REGEXP_CONTAINS(TRIM(cep_incidente), r'^[0-9]{1,5}$')
+            THEN TRIM(cep_incidente)
+        ELSE NULL
+    END AS cep_incidente_padrao,
+
+-- Status: tradução e padronização para português
+    CASE
+        WHEN status IN ('Cancel', 'Cancelled') THEN 'Cancelado'
+        WHEN status = 'In Progress' THEN 'Em andamento'
+        WHEN status = 'Started' THEN 'Iniciado'
+        WHEN status = 'Draft' THEN 'Rascunho'
+        WHEN status = 'Unassigned' THEN 'Não atribuído'
+        WHEN status = 'Assigned' THEN 'Atribuído'
+        WHEN status = 'Pending' THEN 'Pendente'
+        WHEN status = 'Open' THEN 'Aberto'
+        WHEN status = 'Email Sent' THEN 'E-mail enviado'
+        WHEN status = 'Unspecified' THEN 'Não especificado'
+        WHEN status = 'Closed' THEN 'Fechado'
+        WHEN status = 'Closed - Testing' THEN 'Fechado – Em teste'
+        ELSE 'Não informado'
+    END AS status,
+
+-- Bairro: tratar valores desconhecidos e padronizar texto
+    CASE
+        WHEN bairro IN ('N/A', 'Unspecified', 'UNKNOWN', '') THEN 'Não informado'
+        ELSE INITCAP(LOWER(bairro))
+    END AS bairro,
+
+-- Canal de abertura: tratar valores desconhecidos e padronizar texto
+    CASE
+        WHEN tipo_canal_abertura IN ('UNKNOWN', 'Unspecified', 'OTHER', 'N/A', '') THEN 'Não informado'
+        ELSE INITCAP(LOWER(tipo_canal_abertura))
+    END AS tipo_canal_abertura,
+
+-- Campos padronizados com INITCAP
+
+-- Nome da agência
+    INITCAP(LOWER(IFNULL(nome_agencia, 'Não informado'))) AS nome_agencia,
+
+-- Descrição e tipo de local
+    INITCAP(LOWER(IFNULL(descricao, 'Não informado')))   AS descricao,
+    INITCAP(LOWER(IFNULL(tipo_local, 'Não informado'))) AS tipo_local,
+
+-- Endereço e cruzamentos
+    INITCAP(LOWER(IFNULL(endereco_incidente, 'Não informado'))) AS endereco_incidente,
+    INITCAP(LOWER(IFNULL(nome_rua, 'Não informado')))           AS nome_rua,
+    INITCAP(LOWER(IFNULL(rua_cruzamento_1, 'Não informado')))   AS rua_cruzamento_1,
+    INITCAP(LOWER(IFNULL(rua_cruzamento_2, 'Não informado')))   AS rua_cruzamento_2,
+    INITCAP(LOWER(IFNULL(intersecao_rua_1, 'Não informado')))   AS intersecao_rua_1,
+    INITCAP(LOWER(IFNULL(intersecao_rua_2, 'Não informado')))   AS intersecao_rua_2,
+
+-- Informações complementares
+    INITCAP(LOWER(IFNULL(tipo_endereco, 'Não informado')))     AS tipo_endereco,
+    INITCAP(LOWER(IFNULL(cidade, 'Não informado')))            AS cidade,
+    INITCAP(LOWER(IFNULL(ponto_referencia, 'Não informado')))  AS ponto_referencia,
+    INITCAP(LOWER(IFNULL(tipo_instalacao, 'Não informado')))   AS tipo_instalacao,
+
+-- Resolução e conselho comunitário
+    INITCAP(LOWER(IFNULL(descricao_resolucao, 'Não informado')))   AS descricao_resolucao,
+    INITCAP(LOWER(IFNULL(conselho_comunitario, 'Não informado'))) AS conselho_comunitario,
+
+-- Demais campos textuais
+    INITCAP(LOWER(IFNULL(nome_instalacao_parque, 'Não informado'))) AS nome_instalacao_parque,
+    INITCAP(LOWER(IFNULL(bairro_parque, 'Não informado')))          AS bairro_parque,
+    INITCAP(LOWER(IFNULL(tipo_veiculo, 'Não informado')))           AS tipo_veiculo,
+    INITCAP(LOWER(IFNULL(bairro_empresa_taxi, 'Não informado')))    AS bairro_empresa_taxi,
+    INITCAP(LOWER(IFNULL(local_retirada_taxi, 'Não informado')))    AS local_retirada_taxi,
+    INITCAP(LOWER(IFNULL(nome_ponte_rodovia, 'Não informado')))     AS nome_ponte_rodovia,
+    INITCAP(LOWER(IFNULL(direcao_ponte_rodovia, 'Não informado')))  AS direcao_ponte_rodovia,
+    INITCAP(LOWER(IFNULL(rampa_rodovia, 'Não informado')))          AS rampa_rodovia,
+    INITCAP(LOWER(IFNULL(segmento_ponte_rodovia, 'Não informado'))) AS segmento_ponte_rodovia,
+    INITCAP(LOWER(IFNULL(localizacao, 'Não informado')))            AS localizacao
+
+FROM `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311`;
