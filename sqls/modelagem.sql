@@ -124,7 +124,7 @@ SELECT
     latitude,
     longitude,
 
-    -- Agência: manter siglas em maiúsculo
+    -- Agência
     UPPER(
         CASE
             WHEN agencia IS NULL THEN 'Não informado'
@@ -146,7 +146,6 @@ SELECT
 
     -- CEP
     cep_incidente,
-
     CASE
         WHEN REGEXP_CONTAINS(TRIM(cep_incidente), r'^[0-9]{1,5}$')
             THEN TRIM(cep_incidente)
@@ -219,14 +218,6 @@ SELECT
         ELSE 'Não especificado'
     END AS categoria_tempo_resolucao,
 
-    -- Flag de atraso (texto)
-    CASE
-        WHEN status NOT IN ('Closed', 'Closed - Testing')
-             AND DATE_DIFF(CURRENT_DATE(), DATE(data_criacao), DAY) > 30
-            THEN 'Atrasado'
-        ELSE 'No prazo'
-    END AS atraso,
-
     -- Campos textuais padronizados
     INITCAP(LOWER(IFNULL(status, 'Não informado'))) AS status,
     INITCAP(LOWER(IFNULL(nome_agencia, 'Não informado'))) AS nome_agencia,
@@ -256,3 +247,4 @@ SELECT
     INITCAP(LOWER(IFNULL(localizacao, 'Não informado'))) AS localizacao
 
 FROM `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311`;
+
