@@ -154,9 +154,12 @@ SELECT
 
     -- Bairro
     CASE
-        WHEN bairro IN ('N/A', 'Unspecified', 'UNKNOWN', '') THEN 'Não informado'
+        WHEN bairro IS NULL
+         OR bairro IN ('N/A', 'Unspecified', 'UNKNOWN', '')
+        THEN 'Não informado'
         ELSE INITCAP(LOWER(bairro))
     END AS bairro,
+
 
     -- Canal de abertura
     CASE
