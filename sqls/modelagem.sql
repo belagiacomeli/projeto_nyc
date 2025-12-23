@@ -112,7 +112,7 @@ FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
 -- Substituindo nulos por 'Não informado' apenas em colunas STRING 
 CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311` AS
 SELECT
-    -- Campos numéricos e de datas (mantidos como estão)
+    -- Campos numéricos e de datas
     chave_unica,
     data_criacao,
     data_fechamento,
@@ -124,7 +124,7 @@ SELECT
     latitude,
     longitude,
 
-    -- Agência: manter siglas em maiúsculo e tratar valores não informados
+    -- Agência: manter siglas em maiúsculo
     UPPER(
         CASE
             WHEN agencia IS NULL THEN 'Não informado'
@@ -133,7 +133,7 @@ SELECT
         END
     ) AS agencia,
 
-    -- Tipo de reclamação: remover valores inválidos e padronizar texto
+    -- Tipo de reclamação
     CASE
         WHEN tipo_reclamacao IS NULL THEN NULL
         WHEN REGEXP_CONTAINS(
@@ -144,54 +144,115 @@ SELECT
         ELSE INITCAP(LOWER(tipo_reclamacao))
     END AS tipo_reclamacao,
 
-    -- CEP original
+    -- CEP
     cep_incidente,
 
-    -- CEP padronizado: apenas números com até 5 dígitos
     CASE
         WHEN REGEXP_CONTAINS(TRIM(cep_incidente), r'^[0-9]{1,5}$')
             THEN TRIM(cep_incidente)
         ELSE NULL
     END AS cep_incidente_padrao,
 
-    -- Bairro: tratar valores desconhecidos e padronizar texto
+    -- Bairro
     CASE
         WHEN bairro IN ('N/A', 'Unspecified', 'UNKNOWN', '') THEN 'Não informado'
         ELSE INITCAP(LOWER(bairro))
     END AS bairro,
 
-    -- Canal de abertura: tratar valores desconhecidos e padronizar texto
+    -- Canal de abertura
     CASE
-        WHEN tipo_canal_abertura IN ('UNKNOWN', 'Unspecified', 'OTHER', 'N/A', '') THEN 'Não informado'
+        WHEN tipo_canal_abertura IN ('UNKNOWN', 'Unspecified', 'OTHER', 'N/A', '')
+            THEN 'Não informado'
         ELSE INITCAP(LOWER(tipo_canal_abertura))
     END AS tipo_canal_abertura,
 
-    -- Campos padronizados com INITCAP
+    -- Status simplificado para análise
+    CASE
+        WHEN status IN ('Closed', 'Closed - Testing')
+            THEN 'Resolvido'
+        WHEN status IN ('Cancel', 'Cancelled')
+            THEN 'Cancelado'
+        WHEN status IN (
+            'Open',
+            'In Progress',
+            'Started',
+            'Assigned',
+            'Pending',
+            'Email Sent',
+            'Unassigned',
+            'Draft'
+        )
+            THEN 'Em andamento'
+        WHEN status = 'Unspecified'
+            THEN 'Não especificado'
+        ELSE 'Em andamento'
+    END AS status_analise,
+
+    -- Categoria de tempo de resolução
+    CASE
+        WHEN status IN ('Closed', 'Closed - Testing')
+             AND DATE_DIFF(DATE(data_fechamento), DATE(data_criacao), DAY) <= 7
+            THEN 'Rápida'
+
+        WHEN status IN ('Closed', 'Closed - Testing')
+             AND DATE_DIFF(DATE(data_fechamento), DATE(data_criacao), DAY) <= 30
+            THEN 'Média'
+
+        WHEN status IN ('Closed', 'Closed - Testing')
+            THEN 'Lenta'
+
+        WHEN status IN (
+            'Open',
+            'In Progress',
+            'Started',
+            'Assigned',
+            'Pending',
+            'Email Sent',
+            'Unassigned',
+            'Draft'
+        )
+            THEN 'Em andamento'
+
+        WHEN status IN ('Cancel', 'Cancelled')
+            THEN 'Cancelado'
+
+        ELSE 'Não especificado'
+    END AS categoria_tempo_resolucao,
+
+    -- Flag de atraso (texto)
+    CASE
+        WHEN status NOT IN ('Closed', 'Closed - Testing')
+             AND DATE_DIFF(CURRENT_DATE(), DATE(data_criacao), DAY) > 30
+            THEN 'Atrasado'
+        ELSE 'No prazo'
+    END AS atraso,
+
+    -- Campos textuais padronizados
+    INITCAP(LOWER(IFNULL(status, 'Não informado'))) AS status,
     INITCAP(LOWER(IFNULL(nome_agencia, 'Não informado'))) AS nome_agencia,
-    INITCAP(LOWER(IFNULL(descricao, 'Não informado')))   AS descricao,
+    INITCAP(LOWER(IFNULL(descricao, 'Não informado'))) AS descricao,
     INITCAP(LOWER(IFNULL(tipo_local, 'Não informado'))) AS tipo_local,
     INITCAP(LOWER(IFNULL(endereco_incidente, 'Não informado'))) AS endereco_incidente,
-    INITCAP(LOWER(IFNULL(nome_rua, 'Não informado')))           AS nome_rua,
-    INITCAP(LOWER(IFNULL(rua_cruzamento_1, 'Não informado')))   AS rua_cruzamento_1,
-    INITCAP(LOWER(IFNULL(rua_cruzamento_2, 'Não informado')))   AS rua_cruzamento_2,
-    INITCAP(LOWER(IFNULL(intersecao_rua_1, 'Não informado')))   AS intersecao_rua_1,
-    INITCAP(LOWER(IFNULL(intersecao_rua_2, 'Não informado')))   AS intersecao_rua_2,
-    INITCAP(LOWER(IFNULL(tipo_endereco, 'Não informado')))     AS tipo_endereco,
-    INITCAP(LOWER(IFNULL(cidade, 'Não informado')))            AS cidade,
-    INITCAP(LOWER(IFNULL(ponto_referencia, 'Não informado')))  AS ponto_referencia,
-    INITCAP(LOWER(IFNULL(tipo_instalacao, 'Não informado')))   AS tipo_instalacao,
-    INITCAP(LOWER(IFNULL(status, 'Não informado')))            AS status,
-    INITCAP(LOWER(IFNULL(descricao_resolucao, 'Não informado')))   AS descricao_resolucao,
+    INITCAP(LOWER(IFNULL(nome_rua, 'Não informado'))) AS nome_rua,
+    INITCAP(LOWER(IFNULL(rua_cruzamento_1, 'Não informado'))) AS rua_cruzamento_1,
+    INITCAP(LOWER(IFNULL(rua_cruzamento_2, 'Não informado'))) AS rua_cruzamento_2,
+    INITCAP(LOWER(IFNULL(intersecao_rua_1, 'Não informado'))) AS intersecao_rua_1,
+    INITCAP(LOWER(IFNULL(intersecao_rua_2, 'Não informado'))) AS intersecao_rua_2,
+    INITCAP(LOWER(IFNULL(tipo_endereco, 'Não informado'))) AS tipo_endereco,
+    INITCAP(LOWER(IFNULL(cidade, 'Não informado'))) AS cidade,
+    INITCAP(LOWER(IFNULL(ponto_referencia, 'Não informado'))) AS ponto_referencia,
+    INITCAP(LOWER(IFNULL(tipo_instalacao, 'Não informado'))) AS tipo_instalacao,
+    INITCAP(LOWER(IFNULL(descricao_resolucao, 'Não informado'))) AS descricao_resolucao,
     INITCAP(LOWER(IFNULL(conselho_comunitario, 'Não informado'))) AS conselho_comunitario,
     INITCAP(LOWER(IFNULL(nome_instalacao_parque, 'Não informado'))) AS nome_instalacao_parque,
-    INITCAP(LOWER(IFNULL(bairro_parque, 'Não informado')))          AS bairro_parque,
-    INITCAP(LOWER(IFNULL(tipo_veiculo, 'Não informado')))           AS tipo_veiculo,
-    INITCAP(LOWER(IFNULL(bairro_empresa_taxi, 'Não informado')))    AS bairro_empresa_taxi,
-    INITCAP(LOWER(IFNULL(local_retirada_taxi, 'Não informado')))    AS local_retirada_taxi,
-    INITCAP(LOWER(IFNULL(nome_ponte_rodovia, 'Não informado')))     AS nome_ponte_rodovia,
-    INITCAP(LOWER(IFNULL(direcao_ponte_rodovia, 'Não informado')))  AS direcao_ponte_rodovia,
-    INITCAP(LOWER(IFNULL(rampa_rodovia, 'Não informado')))          AS rampa_rodovia,
+    INITCAP(LOWER(IFNULL(bairro_parque, 'Não informado'))) AS bairro_parque,
+    INITCAP(LOWER(IFNULL(tipo_veiculo, 'Não informado'))) AS tipo_veiculo,
+    INITCAP(LOWER(IFNULL(bairro_empresa_taxi, 'Não informado'))) AS bairro_empresa_taxi,
+    INITCAP(LOWER(IFNULL(local_retirada_taxi, 'Não informado'))) AS local_retirada_taxi,
+    INITCAP(LOWER(IFNULL(nome_ponte_rodovia, 'Não informado'))) AS nome_ponte_rodovia,
+    INITCAP(LOWER(IFNULL(direcao_ponte_rodovia, 'Não informado'))) AS direcao_ponte_rodovia,
+    INITCAP(LOWER(IFNULL(rampa_rodovia, 'Não informado'))) AS rampa_rodovia,
     INITCAP(LOWER(IFNULL(segmento_ponte_rodovia, 'Não informado'))) AS segmento_ponte_rodovia,
-    INITCAP(LOWER(IFNULL(localizacao, 'Não informado')))            AS localizacao
+    INITCAP(LOWER(IFNULL(localizacao, 'Não informado'))) AS localizacao
 
 FROM `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311`;
