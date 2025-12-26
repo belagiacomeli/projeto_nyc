@@ -265,3 +265,12 @@ WHERE tipo_reclamacao IS NOT NULL
 GROUP BY tipo_reclamacao
 ORDER BY total_reclamacoes DESC;
 
+-- Tabela com o total de reclamações por bairro
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted__reclamacoes_por_bairro` AS
+SELECT
+  bairro,
+  COUNT(*) AS total_reclamacoes
+FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+GROUP BY bairro
+ORDER BY total_reclamacoes DESC;
+
