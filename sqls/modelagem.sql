@@ -328,3 +328,23 @@ GROUP BY
     agencia,
     nome_agencia
 ORDER BY total_reclamacoes DESC;
+
+-- Tabela com volume de reclamações por agência e tempo médio de resolução
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted_agencia_volume_x_tempo` AS
+SELECT
+    s.agencia,
+    s.nome_agencia,
+    COUNT(*) AS total_reclamacoes,
+    ROUND(
+        AVG(t.dias_para_resolver),
+        2
+    ) AS tempo_medio_resolucao_dias
+
+FROM `meicansoft-prd.projeto_nyc_vpn.trusted_tempo_medio_resolucao` t
+JOIN `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311` s
+    ON t.chave_unica = s.chave_unica
+WHERE s.agencia IS NOT NULL
+GROUP BY
+    s.agencia,
+    s.nome_agencia
+ORDER BY total_reclamacoes DESC;
