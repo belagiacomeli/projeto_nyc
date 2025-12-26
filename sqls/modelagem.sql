@@ -348,3 +348,18 @@ GROUP BY
     s.agencia,
     s.nome_agencia
 ORDER BY total_reclamacoes DESC;
+
+-- Tabela com o total de casos lentos por agência
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted_agencias_casos_lentos` AS
+SELECT
+    s.agencia,
+    s.nome_agencia,
+    COUNT(*) AS casos_lentos
+FROM `meicansoft-prd.projeto_nyc_vpn.trusted_tempo_medio_resolucao` t
+JOIN `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311` s
+    ON t.chave_unica = s.chave_unica
+WHERE t.categoria_tempo_resolucao = 'Lenta'
+GROUP BY
+    s.agencia,
+    s.nome_agencia
+ORDER BY casos_lentos DESC;
