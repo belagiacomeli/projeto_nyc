@@ -251,3 +251,17 @@ SELECT
 
 FROM `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311`;
 
+----------------------------------------------------------------------------------------------------------------------------
+
+-- Criação das tabelas trusted a partir da staging
+
+-- Tabela com o total de reclamações por tipo
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted__top_tipos_reclamacao` AS
+SELECT
+  tipo_reclamacao,
+  COUNT(*) AS total_reclamacoes
+FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+WHERE tipo_reclamacao IS NOT NULL
+GROUP BY tipo_reclamacao
+ORDER BY total_reclamacoes DESC;
+
