@@ -363,3 +363,46 @@ GROUP BY
     s.agencia,
     s.nome_agencia
 ORDER BY casos_lentos DESC;
+
+-- Tabela geral usada no looker com principais métricas
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral` AS
+WITH base_calculada AS (
+    SELECT
+        chave_unica,
+        agencia,
+        nome_agencia,
+        bairro,
+        tipo_reclamacao,
+        status_analise AS status_reclamacao,
+        data_criacao,
+        data_fechamento,
+        EXTRACT(YEAR FROM data_criacao) AS ano,
+        CASE
+            WHEN data_fechamento IS NULL THEN 0
+            WHEN data_fechamento < data_criacao THEN 0
+            WHEN data_fechamento > CURRENT_TIMESTAMP() THEN 0
+            WHEN DATE(data_fechamento) < DATE '1901-01-01' THEN 0
+            ELSE TIMESTAMP_DIFF(data_fechamento, data_criacao, DAY)
+        END AS dias_para_resolver
+    FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+)
+SELECT
+    *,
+    CASE
+        WHEN dias_para_resolver <= 7 THEN 'Rápida'
+        WHEN dias_para_resolver BETWEEN 8 AND 30 THEN 'Média'
+        ELSE 'Lenta'
+    END AS categoria_tempo_resolucao
+FROM base_calculada;
+
+SELECT 
+  tipo_reclamacao, 
+  COUNT(*) AS quantidade
+FROM `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral`
+WHERE tipo_reclamacao IS NULL OR tipo_reclamacao = ''
+GROUP BY 1
+
+SELECT DISTINCT 
+  tipo_reclamacao
+FROM `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral`
+ORDER BY tipo_reclamacao ASC
