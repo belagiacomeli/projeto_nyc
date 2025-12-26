@@ -315,3 +315,16 @@ SELECT
         ELSE 'Lenta'
     END AS categoria_tempo_resolucao
 FROM base;
+
+-- Tabela com o total de reclamações por agência e nome da agência
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted_reclamacoes_por_agencia` AS
+SELECT
+    agencia,
+    nome_agencia,
+    COUNT(*) AS total_reclamacoes
+FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+WHERE agencia IS NOT NULL
+GROUP BY
+    agencia,
+    nome_agencia
+ORDER BY total_reclamacoes DESC;
