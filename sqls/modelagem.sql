@@ -274,3 +274,12 @@ FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
 GROUP BY bairro
 ORDER BY total_reclamacoes DESC;
 
+-- Tabela com quantidade de reclamações por status
+CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.trusted__status_reclamacoes` AS
+SELECT
+    status_analise AS status_reclamacao,
+    COUNT(*) AS total
+FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+GROUP BY status_analise
+ORDER BY total DESC;
+
