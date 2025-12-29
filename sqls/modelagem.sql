@@ -406,3 +406,19 @@ SELECT DISTINCT
   tipo_reclamacao
 FROM `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral`
 ORDER BY tipo_reclamacao ASC
+
+-- Adicionando coluna na staging para ver tipo_canal_abertura
+
+ALTER TABLE `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral`
+ADD COLUMN tipo_canal_abertura STRING;
+
+UPDATE `meicansoft-prd.projeto_nyc_vpn.trusted_nyc_geral` t
+SET tipo_canal_abertura = s.tipo_canal_abertura
+FROM (
+    SELECT
+        chave_unica,
+        ANY_VALUE(tipo_canal_abertura) AS tipo_canal_abertura
+    FROM `meicansoft-prd.projeto_nyc_vpn.staging_nyc_311`
+    GROUP BY chave_unica
+) s
+WHERE t.chave_unica = s.chave_unica;
