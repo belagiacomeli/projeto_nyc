@@ -19,7 +19,7 @@ A arquitetura utiliza:
 * **BigQuery:** Processamento, modelagem e Data Warehousing.
 * **Looker Studio:** Consumo final e visualização.
 
-![Arquitetura do Pipeline]("imagens\arquitetura_pipeline.png.png")  
+![Arquitetura do Pipeline]("Imagens\Diagrama\arquitetura_pipeline.png.png")  
 *Figura 1. Arquitetura do pipeline de dados desenvolvido.*
 
 ---
