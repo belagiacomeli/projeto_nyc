@@ -2,7 +2,6 @@
 
 **Responsável:** Izabela Pereira Giacomeli  
 **Data da última atualização:** 31 de dezembro de 2025  
-**Status:** ![Finalizado](https://img.shields.io/badge/Status-Finalizado-brightgreen)
 
 ---
 
