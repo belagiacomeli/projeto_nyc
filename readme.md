@@ -20,6 +20,7 @@ A arquitetura utiliza:
 * **Looker Studio:** Consumo final e visualização.
 
 <img src="images/arquitetura_pipeline.png" alt="Arquitetura do Pipeline" width="700"/>
+
 *Figura 1. Arquitetura do pipeline de dados desenvolvido.*
 
 ---
