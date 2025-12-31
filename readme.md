@@ -6,7 +6,6 @@
 ---
 
 ## 🔗 Links Úteis
-* **Repositório:** [Acessar GitHub](https://github.com/belagiacomeli/projeto_nyc)
 * **Dashboard:** [Visualizar Looker Studio](https://lookerstudio.google.com/reporting/ab473f47-2316-4d03-8e4e-d00f05a14a02)
 
 ---
