@@ -122,7 +122,8 @@ A tabela trusted_nyc_geral possui a seguinte estrutura:
 | `dias_para_resolver` | INTEGER | Quantidade de dias entre a data de criação e a data de fechamento |
 | `categoria_tempo_resolucao` | STRING | Classificação do tempo de resolução (Rápida, Média ou Lenta) |
 | `tipo_canal_abertura` | STRING | Canal utilizado para abertura da reclamação (Mobile, Online, Phone ou Não informado) |
-*Tabela 1. Estrutura da tabela trusted_nyc_geral*
+
+Tabela 1. Estrutura da tabela trusted_nyc_geral
 
 ---
 
