@@ -135,22 +135,22 @@ SELECT
 
     -- Tipo de reclamação
     CASE
-        WHEN tipo_reclamacao IS NULL THEN NULL
-        WHEN REGEXP_CONTAINS(
+        WHEN tipo_reclamacao IS NULL THEN NULL                     -- Se o tipo de reclamação estiver nulo, mantém como NULL
+        WHEN REGEXP_CONTAINS(                                      -- Verifica se o texto contém padrões suspeitos ou inválidos
             tipo_reclamacao,
-            r'(?i)eval\(|compile\(|<|>|&quot;|-->|\.php|/'
+            r'(?i)eval\(|compile\(|<|>|&quot;|-->|\.php|/'         
         ) THEN NULL
-        WHEN LENGTH(TRIM(tipo_reclamacao)) < 3 THEN NULL
-        ELSE INITCAP(LOWER(tipo_reclamacao))
+        WHEN LENGTH(TRIM(tipo_reclamacao)) < 3 THEN NULL           -- Remove espaços e verifica se o texto tem menos de 3 caracteres, evita valores muito curtos ou sem significado
+        ELSE INITCAP(LOWER(tipo_reclamacao))                       -- Converte tudo para minúsculo e depois capitaliza a primeira letra de cada palavra
     END AS tipo_reclamacao,
 
     -- CEP
-    cep_incidente,
+    cep_incidente,                                                  -- Coluna original do CEP, como veio da fonte (pode conter erros ou espaços)
     CASE
-        WHEN REGEXP_CONTAINS(TRIM(cep_incidente), r'^[0-9]{1,5}$')
-            THEN TRIM(cep_incidente)
-        ELSE NULL
-    END AS cep_incidente_padrao,
+        WHEN REGEXP_CONTAINS(TRIM(cep_incidente), r'^[0-9]{1,5}$')  -- Verifica se o CEP, após remover espaços, contém apenas números e possui entre 1 e 5 dígitos
+            THEN TRIM(cep_incidente)                                -- Se válido, mantém o CEP após remover espaços
+        ELSE NULL                                                   -- Caso não seja válido, retorna NULL
+    END AS cep_incidente_padrao,                                    -- Nova coluna do CEP padronizada
 
     -- Bairro
     CASE
