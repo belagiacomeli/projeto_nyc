@@ -45,24 +45,24 @@ CREATE OR REPLACE EXTERNAL TABLE `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311
   location STRING
 );
 OPTIONS (
-  format = 'CSV',
-  uris = ['gs://projeto_nyc/landing/nyc_311/*.csv'],
-  skip_leading_rows = 1,
-  field_delimiter = ',',
-  allow_quoted_newlines = true,
-  allow_jagged_rows = true
+  format = 'CSV',                                     -- Define que o formato dos arquivos de origem é CSV
+  uris = ['gs://projeto_nyc/landing/nyc_311/*.csv'],  -- Caminho dos arquivos no Google Cloud Storage
+  skip_leading_rows = 1,                              -- Ignora a primeira linha do arquivo CSV (cabeçalho)
+  field_delimiter = ',',                              -- Define o delimitador de campo como vírgula
+  allow_quoted_newlines = true,                       -- Permite quebras de linha dentro de campos entre aspas
+  allow_jagged_rows = true                            -- Permite linhas com número variável de colunas
 );
 
 -- Validando a integridade da ingestão
 SELECT
-  MIN(SAFE_CAST(created_date AS TIMESTAMP)) AS min_created_date,
-  MAX(SAFE_CAST(created_date AS TIMESTAMP)) AS max_created_date,
-  COUNT(*) AS total_registros
-FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
+  MIN(SAFE_CAST(created_date AS TIMESTAMP)) AS min_created_date,   -- Retorna a menor data/hora de criação dos registros
+  MAX(SAFE_CAST(created_date AS TIMESTAMP)) AS max_created_date,   -- Retorna a maior data/hora de criação dos registros
+  COUNT(*) AS total_registros                                      -- Conta o total de registros existentes na tabela
+FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;             -- Tabela de origem na camada Landing
 
 
 -- Criando e inserindo registros na tabela bruta (raw) a partir da landing
--- Fazendo algumas transformações necessárias nos dados 
+-- Fazendo algumas transformações necessárias nos dados, aplicando conversões de tipos
 CREATE OR REPLACE TABLE `meicansoft-prd.projeto_nyc_vpn.raw_tratada_nyc_311` AS
 SELECT
   SAFE_CAST(unique_key AS INT64)                             AS chave_unica,
@@ -106,7 +106,7 @@ SELECT
   SAFE_CAST(latitude AS FLOAT64)                             AS latitude,
   SAFE_CAST(longitude AS FLOAT64)                            AS longitude,
   location                                                   AS localizacao
-FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;
+FROM `meicansoft-prd.projeto_nyc_vpn.landing_nyc_311`;       -- Tabela de origem na camada Landing
 
 -- Criando a tabela de staging tratando apenas as colunas de texto
 -- Substituindo nulos por 'Não informado' apenas em colunas STRING 
