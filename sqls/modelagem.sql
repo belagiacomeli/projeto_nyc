@@ -222,7 +222,7 @@ SELECT
     END AS categoria_tempo_resolucao,
 
     -- Campos textuais padronizados
-    INITCAP(LOWER(IFNULL(status, 'Não informado'))) AS status,
+    INITCAP(LOWER(IFNULL(status, 'Não informado'))) AS status,         -- IFNULL substitui valores nulos por 'Não informado', LOWER converte o texto para minúsculas e INITCAP padroniza o texto deixando a primeira letra de cada palavra em maiúscula
     INITCAP(LOWER(IFNULL(nome_agencia, 'Não informado'))) AS nome_agencia,
     INITCAP(LOWER(IFNULL(descricao, 'Não informado'))) AS descricao,
     INITCAP(LOWER(IFNULL(tipo_local, 'Não informado'))) AS tipo_local,

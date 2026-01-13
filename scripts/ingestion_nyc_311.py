@@ -11,7 +11,7 @@ LIMIT = 50000 # Quantidade máxima de registros por requisição
 BUCKET_NAME = "projeto_nyc" # Nome do bucket no Google Cloud Storage
 
 # FUNÇÕES AUXILIARES
-def parse_data(data_str: str) -> datetime: # Converte uma data no formato dd/mm/aaaa para datetime
+def parse_data(data_str: str) -> datetime: # Converte uma data no formato dd/mm/aaaa para datetime que é reconhecida em python
     return datetime.strptime(data_str, "%d/%m/%Y")
 
 def gerar_intervalos_mensais(data_inicio: datetime, data_fim: datetime): # Divide o período total em intervalos mês a mês
